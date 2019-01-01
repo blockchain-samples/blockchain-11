@@ -1,5 +1,5 @@
 export class Transaction {
-  constructor() {
-    
+
+  constructor(private amount: number, private sender: string, private recipient: string) {
   }
 }

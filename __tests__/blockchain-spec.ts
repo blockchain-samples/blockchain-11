@@ -15,3 +15,18 @@ test('New Block should be created', () => {
   console.log(blockchain);
   expect(newBlock).toBeTruthy();
 });
+
+test('Create new transactions', () => {
+  const blockchain = new Blockchain();
+  blockchain.createNewBlock(789457, 'OIUOEDJETH8754DHKD', '78SHNEG45DER56'); 
+
+  blockchain.createNewTransaction(100, 'ALEX', 'JENN');
+
+
+  console.log(blockchain);
+  blockchain.createNewBlock(548764, 'AKMC875E6S1RS9', 'WPLS214R7T6SJ3G2'); 
+  
+  expect(blockchain.getChain()[1]).toBeTruthy();
+  console.log(blockchain.getChain()[1]);
+
+})
