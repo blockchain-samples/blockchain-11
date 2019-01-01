@@ -1,5 +1,6 @@
 import { Block } from "./block";
 import { Transaction } from "./transaction";
+const shajs = require('sha.js');
 
 export class Blockchain {
   private chain: Array<Block> ;
@@ -8,6 +9,7 @@ export class Blockchain {
   constructor() {
     this.chain = [];
     this.pendingTransactions = [];
+    this.createNewBlock(100, '0', '0');
   }
 
   createNewBlock(nonce:any, previousBlockHash:string, hash:string): Block {
@@ -40,5 +42,23 @@ export class Blockchain {
 
   getChain(): Array<Block>{
     return this.chain;
+  }
+
+  hashBlock(previousBlockHash: string, currentBlock: Block, nonce: number): string {
+    const dataAsString = previousBlockHash + nonce.toString() + JSON.stringify(currentBlock);
+    const hash = shajs('sha256').update(dataAsString).digest('hex');
+    return hash;
+  }
+
+  proofOfWork(previousBlockHash: string, currentBlock: Block):number {
+    let nonce = 0;
+    let hash = this.hashBlock(previousBlockHash, currentBlock, nonce);
+
+    while (hash.substring(0, 4) !== '0000') {
+      nonce++;
+      hash = this.hashBlock(previousBlockHash, currentBlock, nonce);
+    }
+
+    return nonce
   }
 }
