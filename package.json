@@ -18,7 +18,12 @@
   "main": "lib/index",
   "types": "lib/index",
   "scripts": {
-    "start": "ts-node src/api.ts",
+    "start": "ts-node src/api.ts 3000 http://localhost:3000",
+    "node_1": "ts-node src/api.ts 3001 http://localhost:3001",
+    "node_2": "ts-node src/api.ts 3002 http://localhost:3002",
+    "node_3": "ts-node src/api.ts 3003 http://localhost:3003",
+    "node_4": "ts-node src/api.ts 3004 http://localhost:3004",
+    "node_5": "ts-node src/api.ts 3005 http://localhost:3005",
     "dev": "./node_modules/nodemon/bin/nodemon.js",
     "clean": "rimraf lib && rimraf coverage",
     "format": "prettier --write \"{src,__tests__}/**/*.ts\" --single-quote --trailing-comma es5",

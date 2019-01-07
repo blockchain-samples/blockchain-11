@@ -3,7 +3,11 @@ import { Block } from "./block";
 import { Transaction } from "./transaction";
 
 export class Blockchain {
-  private chain: Block[];
+
+  public readonly chain: Block[];
+  public currentNodeUrl?:string;
+  public networkNodes?:string[];
+
   private pendingTransactions: Transaction[];
 
   constructor() {
@@ -43,15 +47,14 @@ export class Blockchain {
     sender: string,
     recipient: string
   ): number {
-    const newTransaction = new Transaction(amount, sender, recipient);
+    const newTransaction = new Transaction();
+    newTransaction.amount = amount;
+    newTransaction.sender = sender;
+    newTransaction.recipient = recipient;
     this.pendingTransactions.push(newTransaction);
     const lastBlock = this.getLastBlock();
 
     return lastBlock ? lastBlock.index + 1 : 0;
-  }
-
-  public getChain(): Block[] {
-    return this.chain;
   }
 
   public hashBlock(

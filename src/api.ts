@@ -7,6 +7,7 @@ import { Blockchain } from "./blockchain";
 
 
 const port = process.argv[2];
+const currentNodeUrl = process.argv[3];
 
 const blockchain = new Blockchain();
 
@@ -51,6 +52,25 @@ app.get("/mine", (req, res) => {
 
 });
 
-app.listen(3000, () => {
-  console.log("Listening on port 3000...");
+app.post("/register-and-broadcast-node", (req, res) => {
+
+  const {
+    body: { newNodeUrl }
+  } = req;
+
+});
+
+app.post("/register-node", (req, res) => {
+
+
+});
+
+app.post("/register-nodes-bulk", (req, res) => {
+
+
+});
+
+app.listen(port, () => {
+  console.log(`Listening on port ${port}...`);
+
 });
