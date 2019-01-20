@@ -6,13 +6,14 @@ export class Blockchain {
 
   public readonly chain: Block[];
   public currentNodeUrl?:string;
-  public networkNodes?:string[];
+  public networkNodes:string[];
 
   private pendingTransactions: Transaction[];
 
   constructor() {
     this.chain = [];
     this.pendingTransactions = [];
+    this.networkNodes = [];
     this.createNewBlock(100, "0", "0");
   }
 

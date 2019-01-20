@@ -1,15 +1,18 @@
 /* tslint:disable:no-console */
 import * as bodyParser from "body-parser";
 import * as express from "express";
-import * as uuid from 'uuid';
+import { networkInterfaces } from "os";
+import * as uuid from "uuid";
 import { Block } from "./block";
 import { Blockchain } from "./blockchain";
+import * as rp from "request-promise";
 
 
 const port = process.argv[2];
 const currentNodeUrl = process.argv[3];
 
 const blockchain = new Blockchain();
+blockchain.currentNodeUrl = currentNodeUrl;
 
 const nodeAddress = uuid().split("-").join("");
 const app = express();
@@ -58,15 +61,76 @@ app.post("/register-and-broadcast-node", (req, res) => {
     body: { newNodeUrl }
   } = req;
 
+  if (blockchain.networkNodes.indexOf(newNodeUrl) < 0) {
+    blockchain.networkNodes.push(newNodeUrl);
+  }
+
+  const regNodesPromises: any[] | rp.RequestPromise[] = [];
+  blockchain.networkNodes.forEach(networkNodeUrl => {
+    const requestOptions = {
+      body: { newNodeUrl },
+      json: true,
+      method: "POST",
+      uri: `${networkNodeUrl}/register-node`
+    };
+
+    regNodesPromises.push(rp(requestOptions));
+  });
+
+  Promise.all(regNodesPromises).then(data => {
+    const bulkRegisterOptions = {
+      body: { allNetworkNodes: [...blockchain.networkNodes, blockchain.currentNodeUrl] },
+      json: true,
+      method: "POST",
+      uri: `${newNodeUrl}/register-nodes-bulk`
+    };
+
+    return rp(bulkRegisterOptions);
+  }).then(data => {
+
+    res.json({ note: "New Node registered with network successfully" });
+  });
+
 });
 
 app.post("/register-node", (req, res) => {
 
+  const {
+    body: { newNodeUrl }
+  } = req;
+  console.log(`registering new url: ${newNodeUrl} on ${blockchain.currentNodeUrl}`);
+
+  if (blockchain.networkNodes.indexOf(newNodeUrl) < 0
+    && newNodeUrl !== blockchain.currentNodeUrl) {
+
+    blockchain.networkNodes.push(newNodeUrl);
+  }
+  res.json({ note: "New node registered successfully" });
 
 });
 
 app.post("/register-nodes-bulk", (req, res) => {
 
+  const {
+    body: { allNetworkNodes }
+  } = req;
+
+  console.log(`registering bulk nodes ${JSON.stringify(allNetworkNodes)}`);
+
+  if (allNetworkNodes) {
+    allNetworkNodes.forEach((networkNodeUrl: string) => {
+
+      if (blockchain.networkNodes.indexOf(networkNodeUrl) < 0
+        && blockchain.currentNodeUrl !== networkNodeUrl) {
+
+        blockchain.networkNodes.push(networkNodeUrl);
+      }
+
+    });
+
+  }
+
+  res.json({ note: "Bulk registration successful" });
 
 });
 

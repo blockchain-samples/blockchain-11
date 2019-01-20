@@ -42,23 +42,25 @@
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "nodemon": "^1.18.9",
+    "request-promise": "^4.2.2",
     "sha.js": "^2.4.11",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@types/jest": "^23.3.3",
     "@types/node": "^10.11.4",
+    "@types/request-promise": "^4.1.42",
     "@types/sha.js": "^2.4.0",
     "coveralls": "^3.0.2",
     "jest": "^23.6.0",
+    "merge": ">=1.2.1",
     "prettier": "^1.14.3",
     "rimraf": "^2.6.2",
     "ts-jest": "^23.10.3",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
-    "typescript": "^3.1.1",
-    "merge": ">=1.2.1"
+    "typescript": "^3.1.1"
   },
   "engines": {
     "node": ">=10.0.0"
