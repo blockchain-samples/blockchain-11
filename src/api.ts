@@ -1,11 +1,10 @@
 /* tslint:disable:no-console */
 import * as bodyParser from "body-parser";
 import * as express from "express";
-import { networkInterfaces } from "os";
+import * as rp from "request-promise";
 import * as uuid from "uuid";
 import { Block } from "./block";
 import { Blockchain } from "./blockchain";
-import * as rp from "request-promise";
 
 
 const port = process.argv[2];
@@ -30,10 +29,10 @@ app.get("/transaction", (req, res) => {
 });
 
 app.post("/transaction", (req, res) => {
-  const { amount, sender, recipient } = req.body;
+  const newTransaction = req.body;
+  const index = blockchain.addTransactionToPendingTransactions(newTransaction);
 
-  const blockIndex = blockchain.createNewTransaction(amount, sender, recipient);
-  res.json({ note: `Transaction will be added in block ${blockIndex}` });
+  res.json({ note: `Transaction will be added in block ${index}` });
 });
 
 app.get("/mine", (req, res) => {
@@ -131,6 +130,36 @@ app.post("/register-nodes-bulk", (req, res) => {
   }
 
   res.json({ note: "Bulk registration successful" });
+
+});
+
+app.post("/transaction/broadcast", (req, res) => {
+
+  const {
+    body: { amount, sender, recipient }
+  } = req;
+  const newTransaction = blockchain.createNewTransaction(amount, sender, recipient);
+  blockchain.addTransactionToPendingTransactions(newTransaction);
+
+  const requestPromises: rp.RequestPromise[]= [];
+
+  blockchain.networkNodes.forEach(networkUrl => {
+    const requestOptions = {
+      body: newTransaction,
+      json: true,
+      method: "POST",
+      uri: networkUrl + "/transaction"
+    };
+
+    requestPromises.push(rp(requestOptions));
+  });
+
+  Promise.all(requestPromises).then(data => {
+    console.log(data);
+    res.json({ note: "Transaction created and broadcast successfully" });
+  });
+
+
 
 });
 

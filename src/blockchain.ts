@@ -1,4 +1,5 @@
 import shajs = require('sha.js');
+import uuid = require("uuid");
 import { Block } from "./block";
 import { Transaction } from "./transaction";
 
@@ -47,14 +48,20 @@ export class Blockchain {
     amount: number,
     sender: string,
     recipient: string
-  ): number {
+  ): Transaction {
     const newTransaction = new Transaction();
     newTransaction.amount = amount;
     newTransaction.sender = sender;
     newTransaction.recipient = recipient;
-    this.pendingTransactions.push(newTransaction);
-    const lastBlock = this.getLastBlock();
+    newTransaction.id = uuid().split("-").join("");
 
+
+    return newTransaction;
+  }
+
+  public addTransactionToPendingTransactions(transaction: Transaction) {
+    this.pendingTransactions.push(transaction);
+    const lastBlock = this.getLastBlock();
     return lastBlock ? lastBlock.index + 1 : 0;
   }
 
