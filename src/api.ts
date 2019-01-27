@@ -20,7 +20,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 app.get("/blockchain", (req, res) => {
-  res.send(blockchain);
+  res.json(blockchain);
 });
 
 
@@ -47,10 +47,59 @@ app.get("/mine", (req, res) => {
 
   blockchain.createNewTransaction(12.5, "00", nodeAddress);
 
+  const requestPromises:rp.RequestPromise[] = [];
+  blockchain.networkNodes.forEach(nodeUrl => {
+
+    const requestOptions = {
+      body: { newBlock },
+      json: true,
+      method: 'POST',
+      uri: nodeUrl + "/receive-new-block"
+    };
+    requestPromises.push(rp(requestOptions));
+  });
+
+  Promise.all(requestPromises).then(data =>{
+    console.log(data);
+    const transactionOptions = {
+      body: {
+        amount: 12.5,
+        recipient: nodeAddress,
+        sender: "00"
+      },
+      json: true,
+      method: "POST",
+      uri: blockchain.currentNodeUrl + "/transaction/broadcast"
+    };
+
+    return rp(transactionOptions);
+  });
   res.json({
     block: newBlock,
     note: "New block mined successfully"
   });
+
+});
+
+app.post("/receive-new-block", (req, res) => {
+  const newBlock = req.body.newBlock;
+  const lastBlock = blockchain.getLastBlock();
+  const correctHash:boolean = lastBlock.hash === newBlock.previousBlockHash;
+  const correctIndex:boolean = lastBlock.index + 1 === newBlock.index;
+
+
+  if (correctHash && correctIndex) {
+    blockchain.chain.push(newBlock);
+    blockchain.clearPendingTransactions();
+
+    res.json({ note: "New block received and accepted.", newBlock });
+  } else {
+    res.json({
+      newBlock,
+      note: "New block rejected."
+    });
+  }
+
 
 });
 

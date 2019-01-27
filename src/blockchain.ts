@@ -78,6 +78,9 @@ export class Blockchain {
     return hash;
   }
 
+  public clearPendingTransactions(){
+    this.pendingTransactions = [];
+  }
   public proofOfWork(previousBlockHash: string, currentBlock: Block): number {
     let nonce = 0;
     let hash = this.hashBlock(previousBlockHash, currentBlock, nonce);
