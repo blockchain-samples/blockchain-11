@@ -92,4 +92,28 @@ export class Blockchain {
 
     return nonce;
   }
+
+  public isChainValid(chain: Block[]): boolean {
+
+    let validChain = true;
+
+    for (let i = 1; i < chain.length; i++) {
+      const currentBlock = chain[i];
+      const previousBlock = chain[i - 1];
+
+      if (currentBlock.previousBlockHash !== previousBlock.hash) {
+        // chain is invalid
+        validChain = false;
+      }
+
+      // todo - may have to clone/strip some data to make the hash match
+      const blockHash = this.hashBlock(previousBlock.hash, currentBlock, currentBlock.nonce);
+
+      if (blockHash.substring(0, 4) !== "0000") {
+        validChain = false;
+      }
+    }
+
+    return validChain;
+  }
 }
