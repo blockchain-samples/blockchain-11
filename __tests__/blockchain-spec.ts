@@ -8,11 +8,11 @@ test('Blockchain should be created', () => {
 test('New Block should be created', () => {
   const blockchain = new Blockchain();
   const newBlock = blockchain.createNewBlock(1111, 'hash2', 'hash1');
-  console.log(newBlock);
+  console.debug(newBlock);
   const anotherBlock = blockchain.createNewBlock(2222, 'hash3', 'hash2');
-  console.log(anotherBlock);
+  console.debug(anotherBlock);
 
-  console.log(blockchain);
+  console.debug(blockchain);
   expect(newBlock).toBeTruthy();
 });
 
@@ -22,11 +22,11 @@ test('Create new transactions', () => {
 
   blockchain.createNewTransaction(100, 'ALEX', 'JENN');
 
-  console.log(blockchain);
+  console.debug(blockchain);
   blockchain.createNewBlock(548764, 'AKMC875E6S1RS9', 'WPLS214R7T6SJ3G2');
 
-  expect(blockchain.getChain()[1]).toBeTruthy();
-  console.log(blockchain.getChain()[1]);
+  expect(blockchain.chain[1]).toBeTruthy();
+  console.debug(blockchain.chain[1]);
 });
 
 test('SHA256 has of block', () => {
@@ -42,7 +42,7 @@ test('SHA256 has of block', () => {
 
   let hash = blockchain.hashBlock(previousBlockHash, currentBlock, 1234);
   let hash2 = blockchain.hashBlock(previousBlockHash, currentBlock, 1234);
-  console.log({ message: 'Hash Value', hash, hash2 });
+  console.debug({ message: 'Hash Value', hash, hash2 });
   expect(hash).toBeTruthy();
   expect(hash2).toEqual(hash);
 });
@@ -56,9 +56,55 @@ test('Proof Of Work should work', () => {
   blockchain.createNewTransaction(200, '89ANS89DFN98', 'AUSDF89ANSD9');
 
   let nonce = 100;
-  let newBlock = blockchain.createNewBlock(nonce, previousHash, 'hash???');
+  const newBlock = blockchain.createNewBlock(nonce, previousHash, 'hash???');
 
   nonce = blockchain.proofOfWork(previousHash, newBlock);
-  console.log({ nonce });
+  console.debug({ nonce });
   expect(nonce).toBeGreaterThan(100);
+});
+
+
+test("Chain Validation should work", () => {
+  const blockChain = new Blockchain();
+  const jsonChain = {
+    "chain": [{
+      "index": 1,
+      "timestamp": 1549127307046,
+      "transactions": [],
+      "hash": "0",
+      "previousBlockHash": "0",
+      "nonce": 100
+    }, {
+      "index": 2,
+      "timestamp": 1549127350033,
+      "transactions": [],
+      "hash": "0000c821654ed8f4a56d1d8206916f5f7eacd0e16f9b78269b41e4210e016eb9",
+      "previousBlockHash": "0",
+      "nonce": 105902
+    }, {
+      "index": 3,
+      "timestamp": 1549127495020,
+      "transactions": [{
+        "amount": 12.5,
+        "sender": "00",
+        "recipient": "57397b8833774836b3dfaec8409fc3b9",
+        "id": "40a2e2ce0754417086adac084f2d37e9"
+      }, { "amount": "10", "sender": "SENDER", "recipient": "RECIPIENT", "id": "7eb4a3db36ef43a3825103f96266bbf2" }],
+      "hash": "0000c7a3c2602ef396eb69dadcc537563bd716d15739ad93052500654beff611",
+      "previousBlockHash": "0000c821654ed8f4a56d1d8206916f5f7eacd0e16f9b78269b41e4210e016eb9",
+      "nonce": 100424
+    }],
+    "pendingTransactions": [{
+      "amount": 12.5,
+      "sender": "00",
+      "recipient": "57397b8833774836b3dfaec8409fc3b9",
+      "id": "4546e505844941a289a04ead27e75238"
+    }],
+    "networkNodes": [],
+    "currentNodeUrl": "http://localhost:3000"
+  };
+
+  const testChain = Object.assign(new Blockchain(), jsonChain);
+  const isValid = blockChain.isChainValid(testChain.chain);
+  expect(isValid).toBeTruthy();
 });

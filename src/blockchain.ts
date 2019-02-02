@@ -70,8 +70,10 @@ export class Blockchain {
     currentBlock: Block,
     nonce: number
   ): string {
+
+    const tempBlock = new Block(currentBlock.index, currentBlock.transactions);
     const dataAsString =
-      previousBlockHash + nonce.toString() + JSON.stringify(currentBlock);
+      previousBlockHash + nonce.toString() + JSON.stringify(tempBlock);
     const hash = shajs("sha256")
       .update(dataAsString)
       .digest("hex");
@@ -106,13 +108,25 @@ export class Blockchain {
         validChain = false;
       }
 
-      // todo - may have to clone/strip some data to make the hash match
       const blockHash = this.hashBlock(previousBlock.hash, currentBlock, currentBlock.nonce);
 
       if (blockHash.substring(0, 4) !== "0000") {
         validChain = false;
       }
     }
+
+    const genesisBlock = chain[0];
+    const correctNonce = genesisBlock.nonce === 100;
+    const correctPreviousBlockHash = genesisBlock.previousBlockHash === "0";
+    const correctHash = genesisBlock.hash === "0";
+    const correctTransactions = genesisBlock.transactions.length === 0;
+
+    validChain =
+      validChain &&
+      correctNonce &&
+      correctHash &&
+      correctPreviousBlockHash &&
+      correctTransactions;
 
     return validChain;
   }
