@@ -1,4 +1,5 @@
-import shajs = require('sha.js');
+import * as _ from "lodash";
+import shajs = require("sha.js");
 import uuid = require("uuid");
 import { Block } from "./block";
 import { Transaction } from "./transaction";
@@ -72,12 +73,8 @@ export class Blockchain {
     sender: string,
     recipient: string
   ): Transaction {
-    const newTransaction = new Transaction();
-    newTransaction.amount = amount;
-    newTransaction.sender = sender;
-    newTransaction.recipient = recipient;
+    const newTransaction = new Transaction(amount, sender, recipient);
     newTransaction.id = uuid().split("-").join("");
-
 
     return newTransaction;
   }
@@ -131,6 +128,55 @@ export class Blockchain {
 
   public clearPendingTransactions(){
     this.pendingTransactions = [];
+  }
+
+  public getBlock(blockHash: string): Block | undefined {
+    return _.find(this.chain, (block: { hash: string; }) => block.hash === blockHash);
+  }
+
+  public getTransaction(transactionId: string): any {
+    // TODO - reimplement to also return the block
+    let foundTransaction = null;
+    let foundBlock = null;
+
+    // tslint:disable-next-line:prefer-const
+    for (let block of this.chain) {
+      const transaction = _.find(block.transactions, (trans) => trans.id === transactionId);
+      if (transaction) {
+        foundBlock = block;
+        foundTransaction = transaction;
+        break;
+      }
+    }
+    if (!foundTransaction) {
+      return {
+        block:null,
+        transaction: _.find(this.pendingTransactions, (pendingTrans) => pendingTrans.id === transactionId)
+      };
+    } else {
+      return {block: foundBlock, transaction: foundTransaction};
+    }
+  }
+
+  public getAddressData(address:string):any{
+    const allTransactions:Transaction[] = _.flatMap(this.chain, (block) => block.transactions);
+    const addressTransactions = _.filter(allTransactions,
+      (transaction) => transaction.recipient === address || transaction.sender === address) || [];
+
+    let balance: number = 0;
+    _.forEach(addressTransactions, (transaction) => {
+      if (transaction.recipient === address) {
+        balance += transaction.amount || 0;
+      } else {
+        balance -= transaction.amount || 0;
+      }
+    });
+
+
+    return {
+      addressTransactions,
+      balance
+    };
   }
 
 }

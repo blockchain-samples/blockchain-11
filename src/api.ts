@@ -24,11 +24,6 @@ app.get("/blockchain", (req, res) => {
   res.json(blockchain);
 });
 
-
-app.get("/transaction", (req, res) => {
-  res.send("Hello World");
-});
-
 app.get("/consensus", (req, resp) => {
   const requestPromises: rp.RequestPromise[]= [];
   blockchain.networkNodes.forEach(networkUrl => {
@@ -73,8 +68,6 @@ app.get("/mine", (req, res) => {
   const blockHash = Blockchain.hashBlock(previousBlockHash, currentBlock, nonce);
 
   const newBlock = blockchain.createNewBlock(nonce, previousBlockHash, blockHash);
-
-  Blockchain.createNewTransaction(12.5, "00", nodeAddress);
 
   const requestPromises:rp.RequestPromise[] = [];
   blockchain.networkNodes.forEach(nodeUrl => {
@@ -215,8 +208,10 @@ app.post("/transaction/broadcast", (req, res) => {
 
   const {
     body: { amount, sender, recipient }
-  } = req;
-  const newTransaction = Blockchain.createNewTransaction(amount, sender, recipient);
+  }:{ body: Transaction} = req;
+
+  console.log(+amount);
+  const newTransaction = Blockchain.createNewTransaction(+amount, sender, recipient);
   blockchain.addTransactionToPendingTransactions(newTransaction);
 
   const requestPromises: rp.RequestPromise[]= [];
@@ -236,9 +231,36 @@ app.post("/transaction/broadcast", (req, res) => {
     console.log(data);
     res.json({ note: "Transaction created and broadcast successfully" });
   });
+});
 
+app.get("/block/:blockHash", (req, resp) => {
+  const blockHash = req.params.blockHash;
+  const foundBlock = blockchain.getBlock(blockHash);
+  if (foundBlock) {
+    resp.json({ block: foundBlock });
+  } else {
+    resp.status(404).json({ error: "block not found" });
+  }
+});
 
+app.get("/transaction/:transactionId", (req, resp) => {
+  const transactionId = req.params.transactionId;
+  const blockAndTransaction = blockchain.getTransaction(transactionId);
+  if (blockAndTransaction && blockAndTransaction.transaction) {
+    resp.json({ result: blockAndTransaction });
+  } else {
+    resp.status(404).json({ error: "transaction not found" });
+  }
+});
 
+app.get("/address/:address", (req, resp) => {
+  const address = req.params.address;
+  const { addressTransactions, balance } = blockchain.getAddressData(address);
+  if (addressTransactions && addressTransactions.length > 0) {
+    resp.json({ addressTransactions, balance });
+  } else {
+    resp.status(404).json({ message: "address not found" });
+  }
 });
 
 app.listen(port, () => {
