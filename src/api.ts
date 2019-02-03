@@ -5,6 +5,7 @@ import * as rp from "request-promise";
 import * as uuid from "uuid";
 import { Block } from "./block";
 import { Blockchain } from "./blockchain";
+import { Transaction } from "./transaction";
 
 
 const port = process.argv[2];
@@ -28,6 +29,34 @@ app.get("/transaction", (req, res) => {
   res.send("Hello World");
 });
 
+app.get("/consensus", (req, resp) => {
+  const requestPromises: rp.RequestPromise[]= [];
+  blockchain.networkNodes.forEach(networkUrl => {
+    const requestOptions = { json: true, method: "GET", uri: `${networkUrl}/blockchain` };
+    requestPromises.push(rp(requestOptions));
+  });
+  Promise.all(requestPromises).then(blockchains => {
+    let maxChainLength = blockchain.chain.length;
+    let longestChain = null;
+    let pendingTransactions: Transaction[] = [];
+    blockchains.forEach(otherChain => {
+      if (otherChain.chain.length > maxChainLength) {
+        maxChainLength = otherChain.chain.length;
+        longestChain = otherChain.chain;
+        pendingTransactions = otherChain.pendingTransactions;
+      }
+    });
+
+    if (!longestChain || !Blockchain.isChainValid(longestChain)) {
+      resp.json({ chain: blockchain.chain, note: "Current chain has not been replaced" });
+    } else {
+      blockchain.chain = longestChain;
+      blockchain.pendingTransactions = pendingTransactions;
+      resp.json({ chain: blockchain.chain, note: "This chain has been replaced" });
+    }
+  });
+});
+
 app.post("/transaction", (req, res) => {
   const newTransaction = req.body;
   const index = blockchain.addTransactionToPendingTransactions(newTransaction);
@@ -40,12 +69,12 @@ app.get("/mine", (req, res) => {
   const previousBlockHash = lastBlock.hash;
   const currentBlock = blockchain.getPendingBlock();
 
-  const nonce = blockchain.proofOfWork(previousBlockHash, currentBlock);
-  const blockHash = blockchain.hashBlock(previousBlockHash, currentBlock, nonce);
+  const nonce = Blockchain.proofOfWork(previousBlockHash, currentBlock);
+  const blockHash = Blockchain.hashBlock(previousBlockHash, currentBlock, nonce);
 
   const newBlock = blockchain.createNewBlock(nonce, previousBlockHash, blockHash);
 
-  blockchain.createNewTransaction(12.5, "00", nodeAddress);
+  Blockchain.createNewTransaction(12.5, "00", nodeAddress);
 
   const requestPromises:rp.RequestPromise[] = [];
   blockchain.networkNodes.forEach(nodeUrl => {
@@ -187,7 +216,7 @@ app.post("/transaction/broadcast", (req, res) => {
   const {
     body: { amount, sender, recipient }
   } = req;
-  const newTransaction = blockchain.createNewTransaction(amount, sender, recipient);
+  const newTransaction = Blockchain.createNewTransaction(amount, sender, recipient);
   blockchain.addTransactionToPendingTransactions(newTransaction);
 
   const requestPromises: rp.RequestPromise[]= [];
