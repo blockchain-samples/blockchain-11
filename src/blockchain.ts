@@ -73,6 +73,7 @@ export class Blockchain {
     sender: string,
     recipient: string
   ): Transaction {
+    // TODO -validate sending address has the amount available
     const newTransaction = new Transaction(amount, sender, recipient);
     newTransaction.id = uuid().split("-").join("");
 

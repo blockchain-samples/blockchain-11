@@ -24,6 +24,10 @@ app.get("/blockchain", (req, res) => {
   res.json(blockchain);
 });
 
+app.get("/block-explorer", (req, res) => {
+  res.sendFile("./index.html", { root: __dirname });
+});
+
 app.get("/consensus", (req, resp) => {
   const requestPromises: rp.RequestPromise[]= [];
   blockchain.networkNodes.forEach(networkUrl => {
@@ -82,7 +86,6 @@ app.get("/mine", (req, res) => {
   });
 
   Promise.all(requestPromises).then(data =>{
-    console.log(data);
     const transactionOptions = {
       body: {
         amount: 12.5,
@@ -210,7 +213,6 @@ app.post("/transaction/broadcast", (req, res) => {
     body: { amount, sender, recipient }
   }:{ body: Transaction} = req;
 
-  console.log(+amount);
   const newTransaction = Blockchain.createNewTransaction(+amount, sender, recipient);
   blockchain.addTransactionToPendingTransactions(newTransaction);
 
@@ -228,7 +230,6 @@ app.post("/transaction/broadcast", (req, res) => {
   });
 
   Promise.all(requestPromises).then(data => {
-    console.log(data);
     res.json({ note: "Transaction created and broadcast successfully" });
   });
 });
